@@ -1,0 +1,159 @@
+= ActsAsEventable
+
+This "acts_as" module makes it extremely simple to add events to a model that will
+be stored in a table for later querying or reporting on. The events have an event 
+type, which also corresponds to how the event is triggered. 
+
+An example of acts_as_eventable's use would be if you needed to track every time a
+particular object was viewed on your site. You could setup and event type of 'view',
+then simply call my_object.view from the the controller's show method (assuming a 
+restful design is in play, of course). This would trigger an entry in the event table,
+noting the object that was viewed.  
+
+The events can be anything you want, and you can call the methods from anywhere. It 
+works whether the object is a first-class Active Record object, or an associated 
+object (via has_xxx or belongs_to).
+
+This is the initial commit, and I have not written any tests or comments in the code
+as of yet. Soon come, mon!  
+
+== Setup
+
+I have not generated a cool migration script yet, so bear with me. If you are using
+this plugin in it's 0.1 state, then here is a migration you need to run:
+
+def self.up
+  create_table :event_types do |t|
+    t.string :name
+  end
+  
+  create_table :events do |t|
+    t.integer :eventable_id
+    t.string :eventable_type
+    t.integer :event_type_id
+    
+    t.timestamps
+  end
+  add_index :events, [:eventable_id, :eventable_type]  
+  add_index :events, :event_type_id
+end
+
+def self.down
+  drop_table :events
+  drop_table :event_types
+end
+
+It adds two tables: events and event_types. They are required. Also you need the
+following gems/plugins:
+
+* enumerations_mixin plugin
+
+== Using acts_as_eventable
+
+First off, after you run the migration above, you need to populate your event_types
+table with whatever kind of events you are going to track. Let's look at the example
+of a coupon website.
+
+For our coupon site, we want to know every time someone views, prints or clips a coupon.
+In that case, I would put the following items in a database population migration or 
+fixture:
+
+EventType.enumeration_model_updates_permitted = true
+EventType.create :name => "print"
+EventType.create :name => "clip"
+EventType.create :name => "view"
+
+Please note that the enumeration_model_updates_permitted = true line is required 
+whenever you are updating the event_types table, because acts_as_eventable uses
+acts_as_enumerated for the EventType model (please make sure you have the 
+enumerations_mixin plugin to support this as I have not yet added it).
+
+Now with your event types setup, you are ready to log events on your objects. Let's
+suppose we have a Coupon object that is living in a lovely RESTfully architected 
+application. 
+
+First, in the Coupon model, you add this:
+
+class Coupon < ActiveRecord::Base  
+  acts_as_eventable
+end  
+  
+In the CouponController's show method, you can do this:
+
+def show
+  @coupon = Coupon.find(params[:id])
+  @coupon.view
+end
+
+Now, whenever someone views that individual coupon, an entry will be logged in the
+events table that looks like this:
+
++----+--------------+----------------+---------------+---------------------+---------------------+
+| id | eventable_id | eventable_type | event_type_id | created_at          | updated_at          |
++----+--------------+----------------+---------------+---------------------+---------------------+
+|  1 |            6 | Coupon         |             3 | 2009-06-15 17:37:47 | 2009-06-15 17:37:47 | 
++----+--------------+----------------+---------------+---------------------+---------------------+
+
+Pretty cool! Notice, we did not add any other methods to Coupon object. The code automatically
+gives the coupon object the methods that correspond to the names of the event types! 
+
+Now, you can actually call the event type items anything you want. Because these items are added
+as methods to whatever object you are making eventable, you may have to come up with some 
+interesting names to prevent name collisions. But, they are purely arbitrary. Just know that the 
+event type name is the same as the method name you will call on your eventable object. One more
+thing: make sure the name can be a valid :symbol. It is important for the rails internals in this 
+case.
+
+So, does it work with associated objects, you ask? As a matter of fact, it does! Let's say you 
+had a ClippedCoupon model, and it was defined as such:
+
+class ClippedCoupon < ActiveRecord::Base
+  belongs_to :coupon
+  belongs_to :user   # just makes our example make more sense - need to know who clipped it!
+end
+
+Notice, I did not make this object acts_as_eventable. Just an ordinary association, because we are
+tracking Coupons, not necessarily ClippedCoupons.
+
+Now, if I want to know if the coupon gets clipped, I would put this in my create method in the 
+ClippedCouponController (again, assuming your app is RESTful):
+
+def create
+  @clipped_coupon = ClippedCoupon.create(:coupon_id => params[:coupon_id], :user_id => current_user.id)
+  @clipped_coupon.coupon.clip
+end
+
+Bam! You have just made the following entry into the events table:
++----+--------------+----------------+---------------+---------------------+---------------------+
+| id | eventable_id | eventable_type | event_type_id | created_at          | updated_at          |
++----+--------------+----------------+---------------+---------------------+---------------------+
+|  2 |            7 | Coupon         |             2 | 2009-06-15 18:01:40 | 2009-06-15 18:01:40 | 
++----+--------------+----------------+---------------+---------------------+---------------------+
+
+And voila! You now have the basis for reporting events on your objects. I will leave that part up to 
+your imagination for now. 
+
+There are a couple of other minor methods in the code, and I am sure I will add a bunch more. I will 
+update this README once I have tests and more methods for you to play with.
+
+For now, enjoy!
+
+= Credits
+acts_as_eventable was created by Netphase, LLC.
+
+Netphase is Chris Beck and Scott Nedderman. 
+
+We'd love to here how you like acts_as_eventable.  If you use it in one of your projects, please 
+drop us a line. 
+
+http://netphase.com
+
+Copyright (c) 2009 Chris Beck, released under the MIT license 
+
+
+
+
+
+
+
+
