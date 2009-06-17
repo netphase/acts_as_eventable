@@ -17,36 +17,36 @@ object (via has_xxx or belongs_to).
 This is the initial commit, and I have not written any tests or comments in the code
 as of yet. Soon come, mon!  
 
+== Install
+
+Acts As Eventable is hosted on github. It may be installed as a gem or a plugin. To 
+install as a gem, do the following:
+
+  sudo gem install netphase-acts_as_eventable
+  
+To install as a plugin, do this:
+
+  script/plugin install git://github.com/netphase/acts_as_eventable.git
+  
+You may also get the latest from github.com by cloning from git://github.com/netphase/acts_as_eventable.git
+
 == Setup
 
-I have not generated a cool migration script yet, so bear with me. If you are using
-this plugin in it's 0.1 state, then here is a migration you need to run:
+This code does not require changing any current database tables.  It only requires 
+adding one migration for two new tables which contain the event types and track the
+events.
 
-def self.up
-  create_table :event_types do |t|
-    t.string :name
-  end
-  
-  create_table :events do |t|
-    t.integer :eventable_id
-    t.string :eventable_type
-    t.integer :event_type_id
-    
-    t.timestamps
-  end
-  add_index :events, [:eventable_id, :eventable_type]  
-  add_index :events, :event_type_id
-end
+Run the following to create the migration:
 
-def self.down
-  drop_table :events
-  drop_table :event_types
-end
+  script/generate acts_as_eventable_migration
 
-It adds two tables: events and event_types. They are required. Also you need the
-following gems/plugins:
+Also you need the following gems/plugins:
 
 * enumerations_mixin plugin
+
+To get it, do this:
+
+  script/plugin install http://svn.protocool.com/public/plugins/enumerations_mixin 
 
 == Using acts_as_eventable
 
@@ -146,7 +146,10 @@ Netphase is Chris Beck and Scott Nedderman.
 We'd love to here how you like acts_as_eventable.  If you use it in one of your projects, please 
 drop us a line. 
 
-http://netphase.com
+For more information or updates on this plugin, visit http://github.com/netphase/acts_as_eventable/tree/master
+
+Also, check out our other projects at http://netphase.com. We are available for consulting work. Contact us
+for your next project.
 
 Copyright (c) 2009 Chris Beck, released under the MIT license 
 
