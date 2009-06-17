@@ -36,13 +36,35 @@ This code does not require changing any current database tables.  It only requir
 adding one migration for two new tables which contain the event types and track the
 events.
 
-Run the following to create the migration:
+If you are using acts_as_eventable as a plugin, you can run this to create the migration:
 
   script/generate acts_as_eventable_migration
+  
+If you are using the gem, create a migration with the following:
+  
+  def self.up
+     create_table :event_types do |t|
+       t.string :name
+     end
 
-Also you need the following gems/plugins:
+     create_table :events do |t|
+       t.integer :eventable_id, :default => 0, :null => false
+       t.string :eventable_type, :limit => 25, :default => "", :null => false
+       t.integer :event_type_id
 
-* enumerations_mixin plugin
+       t.timestamps
+     end
+     add_index :events, [:eventable_id, :eventable_type]  
+     add_index :events, :event_type_id
+   end
+
+   def self.down
+     drop_table :events
+     drop_table :event_types
+   end
+
+IMPORTANT! Acts as Eventable relies on acts_as_enumerated to cache the event types.
+You need to install the enumerations_mixin plugin.
 
 To get it, do this:
 
