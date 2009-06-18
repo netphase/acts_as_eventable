@@ -25,7 +25,7 @@ end
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "netphase-acts_as_eventable"
+    gemspec.name = "acts_as_eventable"
     gemspec.summary = "This acts_as module makes it extremely simple to add events to a model that will be stored in a table for later querying or reporting on."
     gemspec.email = "chris@netphase.com"
     gemspec.homepage = "http://github.com/netphase/acts_as_eventable"
