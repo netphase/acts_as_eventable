@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chris Beck"]
-  s.date = %q{2009-06-17}
+  s.date = %q{2009-06-18}
   s.description = %q{This acts_as module makes it extremely simple to add events to a model that will be stored in a table for later querying or reporting on. The events have an event type, which also corresponds to how the event is triggered. View the README for examples and usage instructions.}
   s.email = %q{chris@netphase.com}
   s.extra_rdoc_files = [
